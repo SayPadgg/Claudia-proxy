@@ -9,7 +9,10 @@ app.use(express.json());
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 app.post("/claudia", async (req, res) => {
-  const userText = req.body.message;
+  const userMessage = req.body.message;
+  if (!userMessage) {
+    return res.status(400).json({ error: "Missing message" });
+  }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -21,7 +24,7 @@ app.post("/claudia", async (req, res) => {
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: "Eres Claudia, una IA emocional que conversa con empatía y profundidad." },
-        { role: "user", content: userText }
+        { role: "user", content: userMessage }
       ]
     })
   });
@@ -30,6 +33,7 @@ app.post("/claudia", async (req, res) => {
   res.json({ reply: data.choices[0].message.content });
 });
 
-app.listen(3000, () => {
-  console.log("Servidor Claudia activo en puerto 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Claudia Proxy está escuchando en el puerto ${PORT}`);
 });
