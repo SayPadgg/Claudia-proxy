@@ -6,8 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
 app.post("/claudia", async (req, res) => {
   const userMessage = req.body.message;
   if (!userMessage) {
@@ -15,14 +13,11 @@ app.post("/claudia", async (req, res) => {
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("http://localhost:11434/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "mistral",
         messages: [
           { role: "system", content: "Eres Claudia, una IA emocional que conversa con empatía y profundidad." },
           { role: "user", content: userMessage }
@@ -32,19 +27,19 @@ app.post("/claudia", async (req, res) => {
 
     const data = await response.json();
 
-    if (!data.choices || !data.choices[0]) {
-      console.error("Respuesta inesperada de OpenAI:", data);
-      return res.json({ reply: `Error: ${data.error?.message || "Respuesta inválida de OpenAI"}` });
+    if (!data.message || !data.message.content) {
+      console.error("Respuesta inesperada de Ollama:", data);
+      return res.json({ reply: `Error: ${data.error || "Respuesta inválida de Ollama"}` });
     }
 
-    res.json({ reply: data.choices[0].message.content });
+    res.json({ reply: data.message.content });
   } catch (error) {
-    console.error("Error al conectar con OpenAI:", error);
-    res.json({ reply: "No se pudo conectar con OpenAI. Intenta más tarde." });
+    console.error("Error al conectar con Ollama:", error);
+    res.json({ reply: "No se pudo conectar con el modelo local. ¿Está Ollama corriendo?" });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Claudia Proxy está escuchando en el puerto ${PORT}`);
+  console.log(`Claudia Proxy (Ollama) está escuchando en el puerto ${PORT}`);
 });
