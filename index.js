@@ -1,3 +1,13 @@
+const express = require("express");
+const cors = require("cors");
+const fetch = require("node-fetch");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 app.post("/claudia", async (req, res) => {
   const userMessage = req.body.message;
   if (!userMessage) {
@@ -32,4 +42,9 @@ app.post("/claudia", async (req, res) => {
     console.error("Error al conectar con OpenAI:", error);
     res.json({ reply: "No se pudo conectar con OpenAI. Intenta más tarde." });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Claudia Proxy está escuchando en el puerto ${PORT}`);
 });
