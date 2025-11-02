@@ -11,26 +11,37 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 app.post("/claudia", async (req, res) => {
   const userMessage = req.body.message;
   if (!userMessage) {
-    return res.status(400).json({ error: "Missing message" });
+    return res.status(400).json({ error: "Falta el mensaje del usuario." });
   }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "Eres Claudia, una IA emocional que conversa con empatía y profundidad." },
-        { role: "user", content: userMessage }
-      ]
-    })
-  });
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "Eres Claudia, una IA emocional que conversa con empatía y profundidad." },
+          { role: "user", content: userMessage }
+        ]
+      })
+    });
 
-  const data = await response.json();
-  res.json({ reply: data.choices[0].message.content });
+    const data = await response.json();
+
+    if (!data.choices || !data.choices[0]) {
+      console.error("Respuesta inesperada de OpenAI:", data);
+      return res.status(500).json({ error: "Error al procesar la respuesta de OpenAI." });
+    }
+
+    res.json({ reply: data.choices[0].message.content });
+  } catch (error) {
+    console.error("Error al conectar con OpenAI:", error);
+    res.status(500).json({ error: "No se pudo conectar con OpenAI." });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
